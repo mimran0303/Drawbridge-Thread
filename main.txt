@@ -1,0 +1,97 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <vector>
+#include <iomanip>
+#include <string>
+#include <utility>
+#include <unistd.h>
+#include <queue>
+#include <sstream>
+//#define MAXTHREADS;//
+using namespace std;
+
+
+// IMPORTANT : Bridge is always at the top of the input and it defines how long the bridge will be open when the next line is Ship //
+
+pthread_mutex_t mutex;
+pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
+
+struct cData
+{
+    static int timetoRaiseDrawbridge;
+    static int timetoLowerDrawbridge;
+    static int nCars;
+    static int nShips;
+    enum DrawbridgeStatus {NOCARS, CARSCANGO}; //no cars, true when there are cars, this is where we will have mutex un/lock
+};
+
+void CarThread(int tid)
+{
+    cout<<"Car "<< name << " arrives at the bridge."<<endl;
+    pthread_mutex_lock(&mutex);
+    cout<<"Car "<< name << " goes on the raised bridge."<<endl;
+    pthread_cond_signal(&signal);
+    cout<<"Car "<< name << " is leaving"<<endl;
+	pthread_mutex_unlock(&mutex);
+}
+
+void ShipThread(int tid)
+{
+    cout<<"Ship "<< name << " arrives at the bridge."<<endl;
+    pthread_mutex_lock(&mutex);
+    cout<<"Ship "<< name << " goes under the raised bridge."<<endl;
+    pthread_cond_signal(&signal);
+    cout<<"Ship "<< name << " is leaving"<<endl;
+	pthread_mutex_unlock(&mutex);
+}
+
+int main()
+{
+    pthread_t tid[MAXTHREADS];
+    string line;
+
+    ifstream file;
+    file.open(filename, ios_base::in);
+    if (file.is_open()) 
+        {
+        while (file.getline(line, 1024)) 
+            
+            {
+                vector<string>* result = new vector<string>();
+                char* split = strtok(_strdup(line.c_str()), " ");
+                while (split != NULL)
+                {
+                    result->push_back(split);
+                    split = strtok(NULL, " ");
+                    
+                    //if statement that if car or ship we create a thread
+                    //sleep function to rep the minutes in seconds
+                }
+                else
+                {
+                    return NULL;
+                }
+            }
+                return true;
+            }
+        }
+        file.close();
+    } else
+        cout << "Failed to open file" << endl;
+
+    return false;
+}
+    
+    
+    for()//loop to join cars thread + create child threads?
+    {
+        pthread_join(tid[i], NULL);
+    }
+    
+    for()//loop to join ships thread + create child threads?
+    {
+        pthread_join(tid[i], NULL);
+    }
+}
