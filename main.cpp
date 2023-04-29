@@ -4,46 +4,64 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 using namespace std;
 
 static pthread_mutex_t bridge;
-pthread_t tid;
 pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
-
+// vector of threads?
 static int timetoRaiseDrawbridge;
 static int timetoLowerDrawbridge;
-static int nCars;
-static int nShips;
-enum DrawbridgeStatus {NOCARS, CARSCANGO}; //no cars, true when there are cars, this is where we will have mutex un/lock
+static int nCars, nShips;
+enum DrawbridgeStatus {
+  NOCARS,
+  CARSCANGO
+}; // no cars, true when there are cars, this is where we will have mutex
+   // un/lock
 
-struct cData
-{
-    char* Type;
-    char* Name;
-    int Delay;
-    int TimeToCross;
+struct cData {
+  char *Type;
+  char *Name;
+  int Delay;
+  int TimeToCross;
 };
 
-void Car(cData* arglist)
-{
-    /*cout<<"Car "<< name << " arrives at the bridge."<<endl;
-    pthread_mutex_lock(&mutex);
-    cout<<"Car "<< name << " goes on the raised bridge."<<endl;
-    pthread_cond_signal(&signal);
-    cout<<"Car "<< name << " is leaving"<<endl;
-	pthread_mutex_unlock(&mutex);*/
+void *Car(void *arglist) {
+  int i = 0;
+  while (i++ < 20) {
+    cout << "car waiting for " << i << " seconds" << endl;
+    sleep(1);
+  }
+  /*cout<<"Car "<< name << " arrives at the bridge."<<endl;
+  pthread_mutex_lock(&mutex);
+  while()
+  {
+  cout<<"Car "<< name << " goes on the raised bridge."<<endl;
+  //pthread wait
+  }
+  pthread_cond_signal(&signal);
+  cout<<"Car "<< name << " is leaving"<<endl;
+      pthread_mutex_unlock(&mutex);*/
 }
 
-void Ship(cData* arglist)
-{
-    /*cout<<"Ship "<< name << " arrives at the bridge."<<endl;
-    pthread_mutex_lock(&mutex);
-    cout<<"Ship "<< name << " goes under the raised bridge."<<endl;
-    pthread_cond_signal(&signal);
-    cout<<"Ship "<< name << " is leaving"<<endl;
-	pthread_mutex_unlock(&mutex);*/
+void *Ship(void *arglist) {
+  int i = 0;
+  while (i++ < 20) {
+    cout << "ship waiting for " << i << " seconds" << endl;
+    sleep(1);
+  }
+  /*cout<<"Ship "<< name << " arrives at the bridge."<<endl;
+  pthread_mutex_lock(&mutex);
+  while()
+  {
+  cout<<"Ship "<< name << " goes under the raised bridge."<<endl;
+  //pthread wait
+  }
+  pthread_cond_signal(&signal);
+  cout<<"Ship "<< name << " is leaving"<<endl;
+      pthread_mutex_unlock(&mutex);*/
 }
 
 bool IsAlphaNum(string s) {
@@ -87,25 +105,29 @@ int main() {
     }
 
     cout << "---SPLIT ITEMS IN LINE---" << endl;
+    const char *comp = result->at(0).c_str();
 
-    for (int i = 0; i < result->size(); i++) {
-      cout << result->at(i) << endl;
-      const char *comp = result->at(i).c_str();
-
-      if (strcasecmp(comp, "Bridge") == 0) {
-        // insert some function that will recognize this as a mutex
-        cout << "----MUTEX DETECTED----" << endl;
-      }
-      if (strcasecmp(comp, "Car") == 0) {
-        // insert some function that will recognize this as a thread and start
-        // working
-        cout << "####CAR THREAD DETECTED####" << endl;
-      }
-      if (strcasecmp(comp, "Ship") == 0) {
-        // insert some function that will recognize this as a thread and start
-        // working
-        cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
-      }
+    if (strcasecmp(comp, "Bridge") == 0) {
+      // insert some function that will recognize this as a mutex
+      cout << "----MUTEX DETECTED----" << endl;
+    }
+    if (strcasecmp(comp, "Car") == 0) {
+      // insert some function that will recognize this as a thread and start
+      // working
+      // pthread create
+      cout << "####CAR THREAD DETECTED####" << endl;
+      pthread_t tid;
+      struct cData *data;
+      pthread_create(&tid, NULL, Car, (void *)&data);
+    }
+    if (strcasecmp(comp, "Ship") == 0) {
+      // insert some function that will recognize this as a thread and start
+      // working
+      // pthread create
+      cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
+      pthread_t tid;
+      struct cData data;
+      pthread_create(&tid, NULL, Ship, (void *)&data);
     }
   }
   // from vector threads can be constructed
