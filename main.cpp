@@ -33,13 +33,15 @@ void *Car(void *arglist) {
   cData *vData = (struct cData *)arglist;
   cout << "Car " << vData->Name << " arrives at the bridge and waiting."
        << endl;
+  sleep(vData->Delay);
   while (bridgeStatus != CARSCANGO) {
-    cout << "Car " << vData->Name << " waiting to cross the bridge." << endl;
+    //cout << "Car " << vData->Name << " waiting to cross the bridge." << endl;
+    sleep(timetoLowerDrawbridge);
     pthread_cond_wait(&signal, &bridge);
   }
    pthread_mutex_lock(&bridge);
   cout << "Car " << vData->Name << " is crossing the bridge" << endl;
-  sleep(5);
+  sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " has finished crossing the bridge" << endl;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
@@ -49,15 +51,15 @@ void *Car(void *arglist) {
 void *Ship(void *arglist) {
   cData *vData = (struct cData *)arglist;
   cout << "Ship " << vData->Name << " arrives at the bridge and waiting." << endl;
+  sleep(vData->Delay);
   pthread_mutex_lock(&bridge);
-  cout << "Ship " << vData->Name << " is raising the bridge" << endl;
-  sleep(1);
+  //cout << "Ship " << vData->Name << " is raising the bridge" << endl;
+  sleep(timetoRaiseDrawbridge);
   bridgeStatus = SHIPSCANGO;
   cout << "Ship " << vData->Name << " goes under the bridge" << endl;
-  sleep(10);
+  sleep(vData->TimeToCross);
   cout << "Ship " << vData->Name << " has finished crossing the bridge" << endl;
-  sleep(1);
-  cout << "Bridge " << vData->Name << " is lowered and cars can go" << endl;
+  //cout << "Bridge " << vData->Name << " is lowered and cars can go" << endl;
   bridgeStatus = CARSCANGO;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
@@ -106,13 +108,16 @@ int main() {
     const char *comp = result->at(0).c_str();
 
     if (strcasecmp(comp, "Bridge") == 0) {
+      timetoRaiseDrawbridge = stoi(result->at(1));
+      timetoLowerDrawbridge = stoi(result->at(2));
       // TODO: populate variables for bridge, name, time to lower, time to raise
     }
     if (strcasecmp(comp, "Car") == 0) {
       pthread_t tid;
       struct cData *data = new cData;
-      ;
       data->Name = result->at(1);
+      data->Delay=stoi(result->at(2));
+      data->TimeToCross=stoi(result->at(3));
       pthread_create(&tid, NULL, Car, (void *)data);
       ThreadIDs[nThreads] = tid;
       nThreads++;
@@ -121,6 +126,8 @@ int main() {
       pthread_t tid;
       struct cData *data = new cData;
       data->Name = result->at(1);
+      data->Delay=stoi(result->at(2));
+      data->TimeToCross=stoi(result->at(3));
       pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads] = tid;
       nThreads++;
