@@ -33,11 +33,11 @@ void *Car(void *arglist) {
   cData *vData = (struct cData *)arglist;
   cout << "Car " << vData->Name << " arrives at the bridge and waiting."
        << endl;
-  pthread_mutex_lock(&bridge);
   while (bridgeStatus != CARSCANGO) {
     cout << "Car " << vData->Name << " waiting to cross the bridge." << endl;
     pthread_cond_wait(&signal, &bridge);
   }
+   pthread_mutex_lock(&bridge);
   cout << "Car " << vData->Name << " is crossing the bridge" << endl;
   sleep(5);
   cout << "Car " << vData->Name << " has finished crossing the bridge" << endl;
