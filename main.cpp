@@ -11,7 +11,7 @@ using namespace std;
 
 const int MAXTHREADS = 2048;
 int nThreads = 0;
-pthread_t ThreadIDs[MAXTHREADS]; //array of thread IDs
+pthread_t ThreadIDs[MAXTHREADS]; // array of thread IDs
 
 static pthread_mutex_t bridge;
 pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
@@ -21,8 +21,8 @@ static int nCars, nShips;
 enum DrawBridgeStatus { SHIPSCANGO, CARSCANGO };
 
 struct cData {
-  char *Type;
-  char *Name;
+  string Type;
+  string Name;
   int Delay;
   int TimeToCross;
 };
@@ -30,37 +30,41 @@ struct cData {
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
 void *Car(void *arglist) {
-  cout << "Car " << arglist << " arrives at the bridge and waiting." << endl;
+  cData *vData = (struct cData *)arglist;
+  cout << "Car " << vData->Name << " arrives at the bridge and waiting."
+       << endl;
   pthread_mutex_lock(&bridge);
   while (bridgeStatus != CARSCANGO) {
-    cout << "Car " << arglist << " waiting to cross the bridge." << endl;
+    cout << "Car " << vData->Name << " waiting to cross the bridge." << endl;
     pthread_cond_wait(&signal, &bridge);
   }
-  cout << "Car " << arglist << " is crossing the bridge" << endl;
+  cout << "Car " << vData->Name << " is crossing the bridge" << endl;
   sleep(5);
-  cout<<"Car has finished crossing the bridge"<<endl;
+  cout << "Car has finished crossing the bridge" << endl;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
 }
 
 void *Ship(void *arglist) {
-  cout << "Ship " << arglist << " arrives at the bridge and waiting." << endl;
+  cData *vData = (struct cData *)arglist;
+  cout << "Ship " << vData->Name << " arrives at the bridge and waiting."
+       << endl;
   pthread_mutex_lock(&bridge);
   /*while (bridgeStatus != SHIPSCANGO) {
     cout << "Ship " << arglist << " goes under the raised bridge." << endl;
     pthread_cond_wait(&signal, &bridge);
   }*/
-  cout<<"Ship is raising the bridge"<<endl;
+  cout << "Ship is raising the bridge" << endl;
   sleep(1);
   bridgeStatus = SHIPSCANGO;
-  cout << "Ship " << arglist << " goes under the bridge" << endl;
+  cout << "Ship " << vData->Name << " goes under the bridge" << endl;
   sleep(10);
-  cout<<"Ship has finished crossing the bridge"<<endl;
+  cout << "Ship has finished crossing the bridge" << endl;
   sleep(1);
-  cout<<"Bridge is lowered and cars can go"<<endl;
+  cout << "Bridge is lowered and cars can go" << endl;
   bridgeStatus = CARSCANGO;
-   pthread_cond_signal(&signal);
+  pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
 }
@@ -118,8 +122,10 @@ int main() {
       // pthread create
       // cout << "####CAR THREAD DETECTED####_ca" << endl;
       pthread_t tid;
-      struct cData *data;
-      pthread_create(&tid, NULL, Car, (void *)&data);
+      struct cData *data = new cData;
+      ;
+      data->Name = result->at(1);
+      pthread_create(&tid, NULL, Car, (void *)data);
       ThreadIDs[nThreads] = tid;
       nThreads++;
     }
@@ -129,15 +135,18 @@ int main() {
       // pthread create
       // cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
       pthread_t tid;
-      struct cData data;
-      pthread_create(&tid, NULL, Ship, (void *)&data);
+      struct cData *data =
+          new cData; // created on heap and it use programmers decision to
+                     // destroy it. And you are not destroying it anyware so it
+                     // is preserved.
+      data->Name = result->at(1);
+      pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads] = tid;
       nThreads++;
     }
   }
 
-  for(int i = 0; i<nThreads;i++)
-  {
+  for (int i = 0; i < nThreads; i++) {
     pthread_join(ThreadIDs[i], NULL);
   }
 
