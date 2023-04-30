@@ -11,15 +11,10 @@ using namespace std;
 
 static pthread_mutex_t bridge;
 pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
-// vector of threads?
 static int timetoRaiseDrawbridge;
 static int timetoLowerDrawbridge;
 static int nCars, nShips;
-enum DrawbridgeStatus {
-  NOCARS,
-  CARSCANGO
-}; // no cars, true when there are cars, this is where we will have mutex
-   // un/lock
+enum DrawBridgeStatus { SHIPSCANGO, CARSCANGO };
 
 struct cData {
   char *Type;
@@ -28,40 +23,34 @@ struct cData {
   int TimeToCross;
 };
 
+pthread_t tid_car;
+pthread_t tid_ship;
+DrawBridgeStatus bridgeStatus = CARSCANGO;
+
 void *Car(void *arglist) {
-  int i = 0;
-  while (i++ < 20) {
-    cout << "car waiting for " << i << " seconds" << endl;
-    sleep(1);
+  cout << "Car " << arglist << " arrives at the bridge." << endl;
+  pthread_mutex_lock(&bridge);
+  while (bridgeStatus != CARSCANGO) {
+    cout << "Car " << arglist << " goes across the bridge." << endl;
+    pthread_cond_wait(&signal, &bridge);
   }
-  /*cout<<"Car "<< name << " arrives at the bridge."<<endl;
-  pthread_mutex_lock(&mutex);
-  while()
-  {
-  cout<<"Car "<< name << " goes on the raised bridge."<<endl;
-  //pthread wait
-  }
+  cout << "Car " << arglist << " is leaving" << endl;
+  pthread_mutex_unlock(&bridge);
   pthread_cond_signal(&signal);
-  cout<<"Car "<< name << " is leaving"<<endl;
-      pthread_mutex_unlock(&mutex);*/
+  pthread_exit(NULL);
 }
 
 void *Ship(void *arglist) {
-  int i = 0;
-  while (i++ < 20) {
-    cout << "ship waiting for " << i << " seconds" << endl;
-    sleep(1);
+  cout << "Ship " << arglist << " arrives at the bridge." << endl;
+  pthread_mutex_lock(&bridge);
+  while (bridgeStatus != SHIPSCANGO) {
+    cout << "Ship " << arglist << " goes under the raised bridge." << endl;
+    pthread_cond_wait(&signal, &bridge);
   }
-  /*cout<<"Ship "<< name << " arrives at the bridge."<<endl;
-  pthread_mutex_lock(&mutex);
-  while()
-  {
-  cout<<"Ship "<< name << " goes under the raised bridge."<<endl;
-  //pthread wait
-  }
+  cout << "Ship " << arglist << " is leaving" << endl;
+  pthread_mutex_unlock(&bridge);
   pthread_cond_signal(&signal);
-  cout<<"Ship "<< name << " is leaving"<<endl;
-      pthread_mutex_unlock(&mutex);*/
+  pthread_exit(NULL);
 }
 
 bool IsAlphaNum(string s) {
@@ -84,7 +73,7 @@ int main() {
   pthread_mutex_init(&bridge, NULL);
   string line;
 
-  cout << "PRINTING LINES" << endl;
+  // cout << "PRINTING LINES" << endl;
 #ifndef CIN
   fstream fin;
   fin.open("input30.txt");
@@ -104,31 +93,35 @@ int main() {
       split = strtok(NULL, " ");
     }
 
-    cout << "---SPLIT ITEMS IN LINE---" << endl;
+    // cout << "---SPLIT ITEMS IN LINE---" << endl;
     const char *comp = result->at(0).c_str();
 
     if (strcasecmp(comp, "Bridge") == 0) {
       // insert some function that will recognize this as a mutex
-      cout << "----MUTEX DETECTED----" << endl;
+      // cout << "----MUTEX DETECTED----" << endl;
     }
     if (strcasecmp(comp, "Car") == 0) {
       // insert some function that will recognize this as a thread and start
       // working
       // pthread create
-      cout << "####CAR THREAD DETECTED####" << endl;
+      // cout << "####CAR THREAD DETECTED####_ca" << endl;
       pthread_t tid;
       struct cData *data;
-      pthread_create(&tid, NULL, Car, (void *)&data);
+      pthread_create(&tid_car, NULL, Car, (void *)&data);
     }
     if (strcasecmp(comp, "Ship") == 0) {
       // insert some function that will recognize this as a thread and start
       // working
       // pthread create
-      cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
+      // cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
       pthread_t tid;
       struct cData data;
-      pthread_create(&tid, NULL, Ship, (void *)&data);
+      pthread_create(&tid_ship, NULL, Ship, (void *)&data);
     }
   }
+
+  pthread_join(tid_car, NULL);
+  pthread_join(tid_ship, NULL);
+
   // from vector threads can be constructed
 }
