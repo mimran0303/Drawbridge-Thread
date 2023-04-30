@@ -40,7 +40,7 @@ void *Car(void *arglist) {
   }
   cout << "Car " << vData->Name << " is crossing the bridge" << endl;
   sleep(5);
-  cout << "Car has finished crossing the bridge" << endl;
+  cout << "Car " << vData->Name << " has finished crossing the bridge" << endl;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
@@ -48,21 +48,16 @@ void *Car(void *arglist) {
 
 void *Ship(void *arglist) {
   cData *vData = (struct cData *)arglist;
-  cout << "Ship " << vData->Name << " arrives at the bridge and waiting."
-       << endl;
+  cout << "Ship " << vData->Name << " arrives at the bridge and waiting." << endl;
   pthread_mutex_lock(&bridge);
-  /*while (bridgeStatus != SHIPSCANGO) {
-    cout << "Ship " << arglist << " goes under the raised bridge." << endl;
-    pthread_cond_wait(&signal, &bridge);
-  }*/
-  cout << "Ship is raising the bridge" << endl;
+  cout << "Ship " << vData->Name << " is raising the bridge" << endl;
   sleep(1);
   bridgeStatus = SHIPSCANGO;
   cout << "Ship " << vData->Name << " goes under the bridge" << endl;
   sleep(10);
-  cout << "Ship has finished crossing the bridge" << endl;
+  cout << "Ship " << vData->Name << " has finished crossing the bridge" << endl;
   sleep(1);
-  cout << "Bridge is lowered and cars can go" << endl;
+  cout << "Bridge " << vData->Name << " is lowered and cars can go" << endl;
   bridgeStatus = CARSCANGO;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
@@ -108,19 +103,12 @@ int main() {
       result->push_back(split);
       split = strtok(NULL, " ");
     }
-
-    // cout << "---SPLIT ITEMS IN LINE---" << endl;
     const char *comp = result->at(0).c_str();
 
     if (strcasecmp(comp, "Bridge") == 0) {
-      // insert some function that will recognize this as a mutex
-      // cout << "----MUTEX DETECTED----" << endl;
+      // TODO: populate variables for bridge, name, time to lower, time to raise
     }
     if (strcasecmp(comp, "Car") == 0) {
-      // insert some function that will recognize this as a thread and start
-      // working
-      // pthread create
-      // cout << "####CAR THREAD DETECTED####_ca" << endl;
       pthread_t tid;
       struct cData *data = new cData;
       ;
@@ -130,15 +118,8 @@ int main() {
       nThreads++;
     }
     if (strcasecmp(comp, "Ship") == 0) {
-      // insert some function that will recognize this as a thread and start
-      // working
-      // pthread create
-      // cout << "^^^^Ship THREAD DETECTED^^^^" << endl;
       pthread_t tid;
-      struct cData *data =
-          new cData; // created on heap and it use programmers decision to
-                     // destroy it. And you are not destroying it anyware so it
-                     // is preserved.
+      struct cData *data = new cData;
       data->Name = result->at(1);
       pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads] = tid;
@@ -149,6 +130,4 @@ int main() {
   for (int i = 0; i < nThreads; i++) {
     pthread_join(ThreadIDs[i], NULL);
   }
-
-  // from vector threads can be constructed
 }
