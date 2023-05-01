@@ -1,6 +1,7 @@
 { pkgs }: {
 	deps = [
-		pkgs.vimHugeX
+		pkgs.nano
+  pkgs.vimHugeX
   pkgs.clang_12
 		pkgs.ccls
 		pkgs.gdb

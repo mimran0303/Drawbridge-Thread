@@ -15,12 +15,13 @@ pthread_t ThreadIDs[MAXTHREADS]; // array of thread IDs
 
 static pthread_mutex_t bridge;
 pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
+
 static int timetoRaiseDrawbridge;
 static int timetoLowerDrawbridge;
 static int nCars, nShips;
 enum DrawBridgeStatus { SHIPSCANGO, CARSCANGO };
 
-struct cData {
+struct VehicleData {
   string Type;
   string Name;
   int Delay;
@@ -29,16 +30,13 @@ struct cData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-void *Car(void *arglist) {
-  cData *vData = (struct cData *)arglist;
-  cout << "Car " << vData->Name << " arrives at the bridge."
-       << endl;
+void *Car(void *vehicledata) {
+  VehicleData *vData = (struct VehicleData *)vehicledata;
+  cout << "Car " << vData->Name << " arrives at the bridge." << endl;
   while (bridgeStatus != CARSCANGO) {
-    cout << "Bridge is closed to car traffic" << endl;
-    sleep(timetoLowerDrawbridge);
     pthread_cond_wait(&signal, &bridge);
   }
-   pthread_mutex_lock(&bridge);
+  pthread_mutex_lock(&bridge);
   cout << "Car " << vData->Name << " goes on the bridge." << endl;
   sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " leaves the bridge." << endl;
@@ -47,16 +45,18 @@ void *Car(void *arglist) {
   pthread_exit(NULL);
 }
 
-void *Ship(void *arglist) {
-  cData *vData = (struct cData *)arglist;
+void *Ship(void *vehicledata) {
+  VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
   pthread_mutex_lock(&bridge);
-  cout<<"Bridge can now be raised."<<endl;
-  sleep(timetoRaiseDrawbridge);
   bridgeStatus = SHIPSCANGO;
+  cout << "Bridge is closed to car traffic" << endl;
+  cout << "Bridge can now be raised." << endl;
+  sleep(timetoRaiseDrawbridge);
   cout << "Ship " << vData->Name << " goes under the bridge." << endl;
   sleep(vData->TimeToCross);
   cout << "Ship " << vData->Name << " is leaving." << endl;
+  sleep(timetoLowerDrawbridge);
   bridgeStatus = CARSCANGO;
   cout << "Bridge can now accommodate car traffic." << endl;
   pthread_cond_signal(&signal);
@@ -84,7 +84,6 @@ int main() {
   pthread_mutex_init(&bridge, NULL);
   string line;
 
-  // cout << "PRINTING LINES" << endl;
 #ifndef CIN
   fstream fin;
   fin.open("input30.txt");
@@ -93,7 +92,6 @@ int main() {
   while (getline(cin, line))
 #endif
   {
-
     if (!IsAlphaNum(line))
       continue;
 
@@ -104,42 +102,37 @@ int main() {
       split = strtok(NULL, " ");
     }
     const char *comp = result->at(0).c_str();
-
     if (strcasecmp(comp, "Bridge") == 0) {
       timetoRaiseDrawbridge = stoi(result->at(1));
       timetoLowerDrawbridge = stoi(result->at(2));
-      // TODO: populate variables for bridge, name, time to lower, time to raise
     }
     if (strcasecmp(comp, "Car") == 0) {
       pthread_t tid;
-      struct cData *data = new cData;
+      struct VehicleData *data = new VehicleData;
       data->Name = result->at(1);
-      data->Delay=stoi(result->at(2));
-      data->TimeToCross=stoi(result->at(3));
-      pthread_create(&tid, NULL, Car, (void *)data);
-      ThreadIDs[nCars] = tid;
+      data->Delay = stoi(result->at(2));
+      data->TimeToCross = stoi(result->at(3));
       sleep(data->Delay);
+      pthread_create(&tid, NULL, Car, (void *)data);
+      ThreadIDs[nThreads++] = tid;
       nCars++;
-      //nCars = nThreads;
     }
     if (strcasecmp(comp, "Ship") == 0) {
       pthread_t tid;
-      struct cData *data = new cData;
+      struct VehicleData *data = new VehicleData;
       data->Name = result->at(1);
-      data->Delay=stoi(result->at(2));
-      data->TimeToCross=stoi(result->at(3));
-      pthread_create(&tid, NULL, Ship, (void *)data);
-      ThreadIDs[nShips] = tid;
+      data->Delay = stoi(result->at(2));
+      data->TimeToCross = stoi(result->at(3));
       sleep(data->Delay);
+      pthread_create(&tid, NULL, Ship, (void *)data);
+      ThreadIDs[nThreads++] = tid;
       nShips++;
-      //nShips = nThreads;
     }
   }
 
-  for (int i = 0; i < nThreads; i++)
-  {
+  for (int i = 0; i < nThreads; i++) {
     pthread_join(ThreadIDs[i], NULL);
   }
-  cout<< nCars <<" car(s) crossed the bridge."<<endl;
-  cout<< nShips <<" ships(s) went under the raised bridge."<<endl;
+  cout << nCars << " car(s) crossed the bridge." << endl;
+  cout << nShips << " ship(s) went under the raised bridge." << endl;
 }
