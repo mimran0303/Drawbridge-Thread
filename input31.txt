@@ -1,0 +1,5 @@
+Bridge 1 1
+Car HIOFCR 0 2	
+Car HIDEBT 1 2	
+Ship Alicia 2 2	
+Car BYOFCR 3 2	

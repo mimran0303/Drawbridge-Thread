@@ -31,18 +31,17 @@ DrawBridgeStatus bridgeStatus = CARSCANGO;
 
 void *Car(void *arglist) {
   cData *vData = (struct cData *)arglist;
-  cout << "Car " << vData->Name << " arrives at the bridge and waiting."
+  cout << "Car " << vData->Name << " arrives at the bridge."
        << endl;
-  sleep(vData->Delay);
   while (bridgeStatus != CARSCANGO) {
-    //cout << "Car " << vData->Name << " waiting to cross the bridge." << endl;
+    cout << "Bridge is closed to car traffic" << endl;
     sleep(timetoLowerDrawbridge);
     pthread_cond_wait(&signal, &bridge);
   }
    pthread_mutex_lock(&bridge);
-  cout << "Car " << vData->Name << " is crossing the bridge" << endl;
+  cout << "Car " << vData->Name << " goes on the bridge." << endl;
   sleep(vData->TimeToCross);
-  cout << "Car " << vData->Name << " has finished crossing the bridge" << endl;
+  cout << "Car " << vData->Name << " leaves the bridge." << endl;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
@@ -50,17 +49,16 @@ void *Car(void *arglist) {
 
 void *Ship(void *arglist) {
   cData *vData = (struct cData *)arglist;
-  cout << "Ship " << vData->Name << " arrives at the bridge and waiting." << endl;
-  sleep(vData->Delay);
+  cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
   pthread_mutex_lock(&bridge);
-  //cout << "Ship " << vData->Name << " is raising the bridge" << endl;
+  cout<<"Bridge can now be raised."<<endl;
   sleep(timetoRaiseDrawbridge);
   bridgeStatus = SHIPSCANGO;
-  cout << "Ship " << vData->Name << " goes under the bridge" << endl;
+  cout << "Ship " << vData->Name << " goes under the bridge." << endl;
   sleep(vData->TimeToCross);
-  cout << "Ship " << vData->Name << " has finished crossing the bridge" << endl;
-  //cout << "Bridge " << vData->Name << " is lowered and cars can go" << endl;
+  cout << "Ship " << vData->Name << " is leaving." << endl;
   bridgeStatus = CARSCANGO;
+  cout << "Bridge can now accommodate car traffic." << endl;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
@@ -119,8 +117,10 @@ int main() {
       data->Delay=stoi(result->at(2));
       data->TimeToCross=stoi(result->at(3));
       pthread_create(&tid, NULL, Car, (void *)data);
-      ThreadIDs[nThreads] = tid;
-      nThreads++;
+      ThreadIDs[nCars] = tid;
+      sleep(data->Delay);
+      nCars++;
+      //nCars = nThreads;
     }
     if (strcasecmp(comp, "Ship") == 0) {
       pthread_t tid;
@@ -129,12 +129,17 @@ int main() {
       data->Delay=stoi(result->at(2));
       data->TimeToCross=stoi(result->at(3));
       pthread_create(&tid, NULL, Ship, (void *)data);
-      ThreadIDs[nThreads] = tid;
-      nThreads++;
+      ThreadIDs[nShips] = tid;
+      sleep(data->Delay);
+      nShips++;
+      //nShips = nThreads;
     }
   }
 
-  for (int i = 0; i < nThreads; i++) {
+  for (int i = 0; i < nThreads; i++)
+  {
     pthread_join(ThreadIDs[i], NULL);
   }
+  cout<< nCars <<" car(s) crossed the bridge."<<endl;
+  cout<< nShips <<" ships(s) went under the raised bridge."<<endl;
 }
