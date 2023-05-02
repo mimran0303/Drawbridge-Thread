@@ -1,3 +1,5 @@
 .breakpoints
 .cache
 .ccls-cache
+main
+main-debug
