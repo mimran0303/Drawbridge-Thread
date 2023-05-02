@@ -30,7 +30,7 @@ struct VehicleData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-bool DEBUG = false;
+bool DEBUG = true;
 
 static void *Car(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
@@ -61,9 +61,7 @@ static void *Ship(void *vehicledata) {
 
   pthread_mutex_lock(&bridge);
   bridgeStatus = SHIPSCANGO;
-  pthread_mutex_unlock(&bridge);
 
-  pthread_mutex_lock(&bridge);
   cout << "Bridge is closed to car traffic" << endl;
   cout << "Bridge can now be raised." << endl;
   sleep(timetoRaiseDrawbridge);
@@ -71,10 +69,9 @@ static void *Ship(void *vehicledata) {
   sleep(vData->TimeToCross);
   cout << "Ship " << vData->Name << " is leaving." << endl;
   sleep(timetoLowerDrawbridge);
-  pthread_mutex_unlock(&bridge);
 
-  pthread_mutex_lock(&bridge);
   bridgeStatus = CARSCANGO;
+
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
 
@@ -106,8 +103,8 @@ int main() {
 #ifndef CIN
   // Development
   fstream fin;
-  // fin.open("experiment.txt");
-  fin.open("input30.txt");
+  fin.open("experiment.txt");
+  // fin.open("input30.txt");
   while (getline(fin, line))
 #else
   // Production
