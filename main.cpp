@@ -11,7 +11,7 @@ using namespace std;
 
 const int MAXTHREADS = 2048;
 int nThreads = 0;
-pthread_t ThreadIDs[MAXTHREADS]; // array of thread IDs
+pthread_t ThreadIDs[MAXTHREADS];
 
 static pthread_mutex_t bridge;
 pthread_cond_t signal = PTHREAD_COND_INITIALIZER;
@@ -30,33 +30,39 @@ struct VehicleData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-bool DEBUG = false;
+bool DEBUG = true;
 
 static void *Car(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Car " << vData->Name << " arrives at the bridge." << endl;
+
+  pthread_mutex_lock(&bridge);
+  
   while (bridgeStatus != CARSCANGO) {
     if (DEBUG)
-      cout << "DEBUG: Car " << vData->Name << " waiting " << endl;
+      cout << "## DEBUG: Car " << vData->Name << " waiting " << endl;
     pthread_cond_wait(&signal, &bridge);
   }
-  if (DEBUG)
-    cout << "DEBUG: Car " << vData->Name << " out of while loop " << endl;
-  pthread_mutex_lock(&bridge);
+
   cout << "Car " << vData->Name << " goes on the bridge." << endl;
   sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " leaves the bridge." << endl;
   nCars++;
+  
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
+
   pthread_exit(NULL);
 }
 
 static void *Ship(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
+
   pthread_mutex_lock(&bridge);
   bridgeStatus = SHIPSCANGO;
+  pthread_mutex_unlock(&bridge);
+
   cout << "Bridge is closed to car traffic" << endl;
   cout << "Bridge can now be raised." << endl;
   sleep(timetoRaiseDrawbridge);
@@ -64,11 +70,14 @@ static void *Ship(void *vehicledata) {
   sleep(vData->TimeToCross);
   cout << "Ship " << vData->Name << " is leaving." << endl;
   sleep(timetoLowerDrawbridge);
+
+  pthread_mutex_lock(&bridge);
   bridgeStatus = CARSCANGO;
-  cout << "Bridge can now accommodate car traffic." << endl;
-  nShips++;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
+
+  cout << "Bridge can now accommodate car traffic." << endl;
+  nShips++;
   pthread_exit(NULL);
 }
 
@@ -95,7 +104,8 @@ int main() {
 #ifndef CIN
   // Development
   fstream fin;
-  fin.open("input30.txt");
+  fin.open("experiment.txt");
+  //fin.open("input30.txt");
   while (getline(fin, line))
 #else
   // Production
