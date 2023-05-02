@@ -30,7 +30,7 @@ struct VehicleData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 static void *Car(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
@@ -104,8 +104,8 @@ int main() {
 #ifndef CIN
   // Development
   fstream fin;
-  fin.open("experiment.txt");
-  //fin.open("input30.txt");
+  //fin.open("experiment.txt");
+  fin.open("input30.txt");
   while (getline(fin, line))
 #else
   // Production
