@@ -46,6 +46,7 @@ static void *Car(void *vehicledata) {
   cout << "Car " << vData->Name << " goes on the bridge." << endl;
   sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " leaves the bridge." << endl;
+  nCars++;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
@@ -65,6 +66,7 @@ static void *Ship(void *vehicledata) {
   sleep(timetoLowerDrawbridge);
   bridgeStatus = CARSCANGO;
   cout << "Bridge can now accommodate car traffic." << endl;
+  nShips++;
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
   pthread_exit(NULL);
@@ -123,8 +125,6 @@ int main() {
       sleep(data->Delay);
       pthread_create(&tid, NULL, Car, (void *)data);
       ThreadIDs[nThreads++] = tid;
-      // nThreads++;
-      nCars++;
     }
     if (strcasecmp(comp, "Ship") == 0) {
       pthread_t tid;
@@ -135,8 +135,6 @@ int main() {
       sleep(data->Delay);
       pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads++] = tid;
-      // nThreads++;
-      nShips++;
     }
   }
 
