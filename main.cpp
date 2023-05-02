@@ -37,7 +37,7 @@ static void *Car(void *vehicledata) {
   cout << "Car " << vData->Name << " arrives at the bridge." << endl;
 
   pthread_mutex_lock(&bridge);
-  
+
   while (bridgeStatus != CARSCANGO) {
     if (DEBUG)
       cout << "## DEBUG: Car " << vData->Name << " waiting " << endl;
@@ -48,7 +48,7 @@ static void *Car(void *vehicledata) {
   sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " leaves the bridge." << endl;
   nCars++;
-  
+
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
 
@@ -63,6 +63,7 @@ static void *Ship(void *vehicledata) {
   bridgeStatus = SHIPSCANGO;
   pthread_mutex_unlock(&bridge);
 
+  pthread_mutex_lock(&bridge);
   cout << "Bridge is closed to car traffic" << endl;
   cout << "Bridge can now be raised." << endl;
   sleep(timetoRaiseDrawbridge);
@@ -70,6 +71,7 @@ static void *Ship(void *vehicledata) {
   sleep(vData->TimeToCross);
   cout << "Ship " << vData->Name << " is leaving." << endl;
   sleep(timetoLowerDrawbridge);
+  pthread_mutex_unlock(&bridge);
 
   pthread_mutex_lock(&bridge);
   bridgeStatus = CARSCANGO;
@@ -104,7 +106,7 @@ int main() {
 #ifndef CIN
   // Development
   fstream fin;
-  //fin.open("experiment.txt");
+  // fin.open("experiment.txt");
   fin.open("input30.txt");
   while (getline(fin, line))
 #else
