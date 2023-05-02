@@ -88,13 +88,15 @@ int main() {
   pthread_mutex_init(&bridge, NULL);
   string line;
 
-/*#ifndef CIN
+#ifndef CIN
+  // Development
   fstream fin;
   fin.open("input30.txt");
-  while (getline(fin, line))*/
-//#else
+  while (getline(fin, line))
+#else
+	  // Production
   while (getline(cin, line))
-//#endif
+#endif
   {
     if (!IsAlphaNum(line))
       continue;
