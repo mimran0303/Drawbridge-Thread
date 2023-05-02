@@ -30,13 +30,17 @@ struct VehicleData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-void *Car(void *vehicledata) {
+bool DEBUG = true;
+
+static void *Car(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Car " << vData->Name << " arrives at the bridge." << endl;
+  pthread_mutex_lock(&bridge);
   while (bridgeStatus != CARSCANGO) {
+    if ( DEBUG ) cout << "DEBUG: Car " << vData->Name << " waiting " << endl;
     pthread_cond_wait(&signal, &bridge);
   }
-  pthread_mutex_lock(&bridge);
+  if ( DEBUG ) cout << "DEBUG: Car " << vData->Name << " out of while loop " << endl;
   cout << "Car " << vData->Name << " goes on the bridge." << endl;
   sleep(vData->TimeToCross);
   cout << "Car " << vData->Name << " leaves the bridge." << endl;
@@ -45,7 +49,7 @@ void *Car(void *vehicledata) {
   pthread_exit(NULL);
 }
 
-void *Ship(void *vehicledata) {
+static void *Ship(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
   pthread_mutex_lock(&bridge);
@@ -84,13 +88,13 @@ int main() {
   pthread_mutex_init(&bridge, NULL);
   string line;
 
-#ifndef CIN
+/*#ifndef CIN
   fstream fin;
   fin.open("input30.txt");
-  while (getline(fin, line))
-#else
+  while (getline(fin, line))*/
+//#else
   while (getline(cin, line))
-#endif
+//#endif
   {
     if (!IsAlphaNum(line))
       continue;
@@ -115,6 +119,7 @@ int main() {
       sleep(data->Delay);
       pthread_create(&tid, NULL, Car, (void *)data);
       ThreadIDs[nThreads++] = tid;
+      //nThreads++;
       nCars++;
     }
     if (strcasecmp(comp, "Ship") == 0) {
@@ -126,6 +131,7 @@ int main() {
       sleep(data->Delay);
       pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads++] = tid;
+      //nThreads++;
       nShips++;
     }
   }
