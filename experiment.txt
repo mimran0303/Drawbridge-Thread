@@ -1,0 +1,12 @@
+Bridge 1 1
+Car a 1 1
+Car b 1 1
+Car f 1 1
+Car g 1 1
+Ship h 1 7
+Car i 1 1
+Car j 1 1
+Ship k 1 1
+Car l 0 3
+Car z 1 2
+Car y 2 1
