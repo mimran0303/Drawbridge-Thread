@@ -30,23 +30,29 @@ struct VehicleData {
 
 DrawBridgeStatus bridgeStatus = CARSCANGO;
 
-bool DEBUG = true;
+bool DEBUG = false;
+
+bool IsAlphaNum(string s);
 
 static void *Car(void *vehicledata) {
+
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Car " << vData->Name << " arrives at the bridge." << endl;
+
   pthread_mutex_lock(&bridge);
-  while (bridgeStatus != CARSCANGO) {
-    if (DEBUG)
-      cout << "## DEBUG: Car " << vData->Name << " waiting " << endl;
-    pthread_cond_wait(&signal, &bridge);
+  {
+    while (bridgeStatus != CARSCANGO) {
+      if (DEBUG)
+        cout << "## DEBUG: Car " << vData->Name << " waiting " << endl;
+      pthread_cond_wait(&signal, &bridge);
+    }
+
+    cout << "Car " << vData->Name << " goes on the bridge." << endl;
+    sleep(vData->TimeToCross);
+    cout << "Car " << vData->Name << " leaves the bridge." << endl;
+
+    nCars++;
   }
-
-  cout << "Car " << vData->Name << " goes on the bridge." << endl;
-  sleep(vData->TimeToCross);
-  cout << "Car " << vData->Name << " leaves the bridge." << endl;
-  nCars++;
-
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
 
@@ -54,58 +60,39 @@ static void *Car(void *vehicledata) {
 }
 
 static void *Ship(void *vehicledata) {
+
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
-  bridgeStatus = SHIPSCANGO;
-  pthread_mutex_lock(&bridge);
-  cout << "Bridge is closed to car traffic" << endl;
-  cout << "Bridge can now be raised." << endl;
-  sleep(timetoRaiseDrawbridge);
-  cout << "Ship " << vData->Name << " goes under the bridge." << endl;
-  sleep(vData->TimeToCross);
-  cout << "Ship " << vData->Name << " is leaving." << endl;
-  sleep(timetoLowerDrawbridge);
 
+  bridgeStatus = SHIPSCANGO;
+  cout << "Bridge is closed to car traffic" << endl;
+
+  pthread_mutex_lock(&bridge);
+  {
+    cout << "Bridge can now be raised." << endl;
+    sleep(timetoRaiseDrawbridge);
+
+    cout << "Ship " << vData->Name << " goes under the bridge." << endl;
+    sleep(vData->TimeToCross);
+    cout << "Ship " << vData->Name << " is leaving." << endl;
+
+    sleep(timetoLowerDrawbridge);
+    nShips++;
+  }
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
+
   bridgeStatus = CARSCANGO;
-  
   cout << "Bridge can now accommodate car traffic." << endl;
-  nShips++;
+
   pthread_exit(NULL);
-}
-
-bool IsAlphaNum(string s) {
-  bool result = false;
-  for (int i = 0; i < s.length(); i++) {
-    if (isalnum(s.at(i)))
-      result = true;
-  }
-  return result;
-}
-
-char *ConvertToCharPointer(string &s) {
-  int len = s.length();
-  char *str = new char[len + 1];
-  strcpy(str, s.c_str());
-  return str;
 }
 
 int main() {
   pthread_mutex_init(&bridge, NULL);
   string line;
 
-#ifndef CIN
-  // Development
-  fstream fin;
-  fin.open("input30.txt");
-  // fin.open("input30.txt");
-  while (getline(fin, line))
-#else
-  // Production
-  while (getline(cin, line))
-#endif
-  {
+  while (getline(cin, line)) {
     if (!IsAlphaNum(line))
       continue;
 
@@ -147,4 +134,13 @@ int main() {
   }
   cout << nCars << " car(s) crossed the bridge." << endl;
   cout << nShips << " ship(s) went under the raised bridge." << endl;
+}
+
+bool IsAlphaNum(string s) {
+  bool result = false;
+  for (int i = 0; i < s.length(); i++) {
+    if (isalnum(s.at(i)))
+      result = true;
+  }
+  return result;
 }
