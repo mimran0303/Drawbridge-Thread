@@ -35,9 +35,7 @@ bool DEBUG = true;
 static void *Car(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Car " << vData->Name << " arrives at the bridge." << endl;
-
   pthread_mutex_lock(&bridge);
-
   while (bridgeStatus != CARSCANGO) {
     if (DEBUG)
       cout << "## DEBUG: Car " << vData->Name << " waiting " << endl;
@@ -58,10 +56,8 @@ static void *Car(void *vehicledata) {
 static void *Ship(void *vehicledata) {
   VehicleData *vData = (struct VehicleData *)vehicledata;
   cout << "Ship " << vData->Name << " arrives at the bridge." << endl;
-
-  pthread_mutex_lock(&bridge);
   bridgeStatus = SHIPSCANGO;
-
+  pthread_mutex_lock(&bridge);
   cout << "Bridge is closed to car traffic" << endl;
   cout << "Bridge can now be raised." << endl;
   sleep(timetoRaiseDrawbridge);
@@ -70,11 +66,10 @@ static void *Ship(void *vehicledata) {
   cout << "Ship " << vData->Name << " is leaving." << endl;
   sleep(timetoLowerDrawbridge);
 
-  bridgeStatus = CARSCANGO;
-
   pthread_cond_signal(&signal);
   pthread_mutex_unlock(&bridge);
-
+  bridgeStatus = CARSCANGO;
+  
   cout << "Bridge can now accommodate car traffic." << endl;
   nShips++;
   pthread_exit(NULL);
@@ -103,7 +98,7 @@ int main() {
 #ifndef CIN
   // Development
   fstream fin;
-  fin.open("experiment.txt");
+  fin.open("input30.txt");
   // fin.open("input30.txt");
   while (getline(fin, line))
 #else
