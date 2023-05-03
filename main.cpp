@@ -1,3 +1,9 @@
+//
+// Mariam Imran
+// COSC 3360 - 6310
+// Due May 4 2023
+// Assignment 3
+//
 #include <fstream>
 #include <iostream>
 #include <pthread.h>
@@ -34,6 +40,10 @@ bool DEBUG = false;
 
 bool IsAlphaNum(string s);
 
+//
+// This method handles car thread and ensure that cars don't
+// cross the bridge when it is raised.
+//
 static void *Car(void *vehicledata) {
 
   VehicleData *vData = (struct VehicleData *)vehicledata;
@@ -59,6 +69,10 @@ static void *Car(void *vehicledata) {
   pthread_exit(NULL);
 }
 
+//
+// Handles ship threads and handles raising and
+// lowering the bridge.
+//
 static void *Ship(void *vehicledata) {
 
   VehicleData *vData = (struct VehicleData *)vehicledata;
@@ -88,11 +102,17 @@ static void *Ship(void *vehicledata) {
   pthread_exit(NULL);
 }
 
+//
+// Recieve and parse input text
+// and creates car and ship threads.
+//
 int main() {
-  pthread_mutex_init(&bridge, NULL);
-  string line;
 
+  pthread_mutex_init(&bridge, NULL);
+
+  string line;
   while (getline(cin, line)) {
+
     if (!IsAlphaNum(line))
       continue;
 
@@ -102,33 +122,47 @@ int main() {
       result->push_back(split);
       split = strtok(NULL, " ");
     }
+
     const char *comp = result->at(0).c_str();
     if (strcasecmp(comp, "Bridge") == 0) {
+
       timetoRaiseDrawbridge = stoi(result->at(1));
       timetoLowerDrawbridge = stoi(result->at(2));
-    }
-    if (strcasecmp(comp, "Car") == 0) {
-      pthread_t tid;
+
+    } else if (strcasecmp(comp, "Car") == 0) {
+
       struct VehicleData *data = new VehicleData;
       data->Name = result->at(1);
       data->Delay = stoi(result->at(2));
       data->TimeToCross = stoi(result->at(3));
+
       sleep(data->Delay);
+
+      pthread_t tid;
       pthread_create(&tid, NULL, Car, (void *)data);
       ThreadIDs[nThreads++] = tid;
-    }
-    if (strcasecmp(comp, "Ship") == 0) {
-      pthread_t tid;
+
+    } else if (strcasecmp(comp, "Ship") == 0) {
+
       struct VehicleData *data = new VehicleData;
       data->Name = result->at(1);
       data->Delay = stoi(result->at(2));
       data->TimeToCross = stoi(result->at(3));
+
       sleep(data->Delay);
+
+      pthread_t tid;
       pthread_create(&tid, NULL, Ship, (void *)data);
       ThreadIDs[nThreads++] = tid;
+
+    } else {
+
+      cout << "Error: Unknown command [" << comp << "]" << endl;
+        
     }
   }
 
+  // Wait for all threads to finish
   for (int i = 0; i < nThreads; i++) {
     pthread_join(ThreadIDs[i], NULL);
   }
@@ -136,6 +170,9 @@ int main() {
   cout << nShips << " ship(s) went under the raised bridge." << endl;
 }
 
+//
+// Checks to see if string is alphanumeric
+//
 bool IsAlphaNum(string s) {
   bool result = false;
   for (int i = 0; i < s.length(); i++) {
